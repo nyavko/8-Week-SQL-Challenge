@@ -13,4 +13,4 @@ This repository contains my solutions to the 8-Week SQL Challenge by Danny Ma. E
 
 The goal of this repo is to document my learning journey, strengthen my SQL skills, and demonstrate approaches to solving analytical problems with clean, well-structured queries.
 
-[Case Study #1 — Danny’s Diner](main/Case Study #1 — Danny’s Diner.md)
+[Case Study #1 — Danny’s Diner](Case Study #1 - Danny's Diner.md)
