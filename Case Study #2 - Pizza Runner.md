@@ -1,4 +1,4 @@
-#🍕 Case Study #2 — Pizza Runner
+# 🍕 Case Study #2 — Pizza Runner
 
 This case study is part of the 8-Week SQL Challenge by Danny Ma.
 
@@ -48,7 +48,7 @@ WHERE extras IS NULL OR extras = 'null';
 
 ## A. Pizza Metrics
 1. How many pizzas were ordered?
-    ```
+```
 SELECT COUNT(pizza_id) AS pizzas_num
     FROM customer_orders;
 ```
@@ -59,7 +59,7 @@ SELECT COUNT(pizza_id) AS pizzas_num
 
 ---
 2. How many unique customer orders were made?
-    ```
+```
 SELECT COUNT(DISTINCT order_id) AS unique_orders
     FROM customer_orders;
 ```
@@ -70,7 +70,7 @@ SELECT COUNT(DISTINCT order_id) AS unique_orders
 
 ---
 3. How many successful orders were delivered by each runner?
-    ```
+```
 SELECT runner_id, COUNT(cancellation) AS successful_orders_num
     FROM runner_orders
     WHERE cancellation = ''
@@ -85,7 +85,7 @@ SELECT runner_id, COUNT(cancellation) AS successful_orders_num
 
 ---
 4. How many of each type of pizza was delivered?
-    ```
+```
 SELECT pizza_name, COUNT(customer_orders.pizza_id) AS total_quantity
     FROM runner_orders JOIN customer_orders 
     ON runner_orders.order_id = customer_orders.order_id JOIN pizza_names
@@ -118,7 +118,7 @@ SELECT customer_id, SUM(CASE WHEN pizza_name = 'Vegetarian' THEN 1 ELSE 0 END) A
 | 105         | 1                   | 0                   |
 
 ---
-6.What was the maximum number of pizzas delivered in a single order?
+6. What was the maximum number of pizzas delivered in a single order?
 ```
     SELECT COUNT(customer_orders.pizza_id) AS max_quantity
     FROM runner_orders JOIN customer_orders 
@@ -134,8 +134,8 @@ SELECT customer_id, SUM(CASE WHEN pizza_name = 'Vegetarian' THEN 1 ELSE 0 END) A
 | 3            |
 
 ---
-7.For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
-    ```
+7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
+```
 SELECT customer_orders.customer_id, SUM(CASE WHEN exclusions <>'' OR extras <> '' THEN 1 ELSE 0 END) AS sum_of_changed_pizza, SUM(CASE WHEN exclusions = '' AND extras = '' THEN 1 ELSE 0 END) AS sum_of_unchanged_pizzas
     FROM runner_orders JOIN customer_orders 
     ON runner_orders.order_id = customer_orders.order_id
@@ -154,7 +154,7 @@ SELECT customer_orders.customer_id, SUM(CASE WHEN exclusions <>'' OR extras <> '
 
 ---
  8. How many pizzas were delivered that had both exclusions and extras?
-    ```
+```
 SELECT SUM(CASE WHEN exclusions <>'' AND extras <> '' THEN 1 ELSE 0 END) AS total_sum_of_very_changed_pizzas 
     FROM runner_orders JOIN customer_orders 
     ON runner_orders.order_id = customer_orders.order_id
@@ -167,7 +167,7 @@ SELECT SUM(CASE WHEN exclusions <>'' AND extras <> '' THEN 1 ELSE 0 END) AS tota
 
 ---
 9. What was the total volume of pizzas ordered for each hour of the day?
-    ```
+```
 SELECT date_part('hour', order_time) AS each_hour, COUNT(pizza_id) AS volume_of_pizzas
     FROM customer_orders
     GROUP BY date_part('hour', order_time)
@@ -185,7 +185,7 @@ SELECT date_part('hour', order_time) AS each_hour, COUNT(pizza_id) AS volume_of_
 
 ---
 10. What was the volume of orders for each day of the week?
-    ```
+```
 SELECT CASE date_part('dow', order_time)
         WHEN 0 THEN 'Sun'
         WHEN 1 THEN 'Mon'
@@ -209,7 +209,7 @@ SELECT CASE date_part('dow', order_time)
 
 ## B. Runner and Customer Experience
 1. How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
-    ```
+```
 SELECT date_part ('week', registration_date)AS week_num, COUNT(runner_id) AS num_of_runners
     FROM runners
     GROUP BY date_part ('week', registration_date)
@@ -223,7 +223,7 @@ SELECT date_part ('week', registration_date)AS week_num, COUNT(runner_id) AS num
 | 53       | 2              |
 
 2. What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
-    ```
+```
 SELECT runner_id, CAST(AVG(EXTRACT(EPOCH FROM (pickup_time - order_time)) / 60) AS DECIMAL(10,2)) AS avg_time_in_minutes
     FROM runner_orders JOIN customer_orders 
     ON runner_orders.order_id = customer_orders.order_id
@@ -240,7 +240,7 @@ SELECT runner_id, CAST(AVG(EXTRACT(EPOCH FROM (pickup_time - order_time)) / 60) 
 
 ---
 3. Is there any relationship between the number of pizzas and how long the order takes to prepare?
-    ```
+```
 WITH temp AS
     (
         SELECT customer_orders.order_id, COUNT(pizza_id) AS num_of_pizzas, EXTRACT(EPOCH FROM (pickup_time - order_time) / 60) AS time_in_minutes
@@ -263,7 +263,7 @@ WITH temp AS
 
 ---
 4. What was the average distance travelled for each customer?
-    ```
+```
 WITH distinct_customer_orders AS 
     (
     SELECT DISTINCT order_id, customer_id
@@ -287,7 +287,7 @@ WITH distinct_customer_orders AS
 
 ---
 5. What was the difference between the longest and shortest delivery times for all orders?
-    ```
+```
 SELECT MAX(duration) - MIN(duration) AS diff
     FROM runner_orders
     WHERE cancellation = '';
@@ -299,7 +299,7 @@ SELECT MAX(duration) - MIN(duration) AS diff
 
 ---
 6. What was the average speed for each runner for each delivery and do you notice any trend for these values?
-    ```
+```
 SELECT runner_id, CAST(AVG(distance/(duration/60))AS DECIMAL(10,2)) AS avg_speed
     FROM runner_orders
     GROUP BY runner_id
@@ -314,7 +314,7 @@ SELECT runner_id, CAST(AVG(distance/(duration/60))AS DECIMAL(10,2)) AS avg_speed
 
 ---
 7. What is the successful delivery percentage for each runner?
-    ```
+```
 SELECT runner_id, CONCAT(100 * CAST(CAST(SUM(CASE WHEN cancellation = '' THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(order_id) AS FLOAT) AS DECIMAL (10,2)), '%') AS success_rate
     FROM runner_orders
     GROUP BY runner_id
@@ -330,7 +330,7 @@ SELECT runner_id, CONCAT(100 * CAST(CAST(SUM(CASE WHEN cancellation = '' THEN 1 
 ---
 ## C. Ingredient Optimisation
 1. What are the standard ingredients for each pizza? 
-    ```
+```
 WITH pizza_recipes_new AS
     (
     	SELECT pizza_id, CAST(UNNEST(STRING_TO_ARRAY(toppings, ', ')) AS INTEGER) AS topping_id
@@ -350,7 +350,7 @@ WITH pizza_recipes_new AS
 
 ---
 2. What was the most commonly added extra?
-    ```
+```
 WITH customer_orders_new AS
     (
       SELECT CAST(UNNEST(STRING_TO_ARRAY(extras, ', ')) AS INTEGER) AS extra_id
@@ -370,7 +370,7 @@ WITH customer_orders_new AS
 
 ---
 3. What was the most common exclusion?
-    ```
+```
 WITH customer_orders_new AS
     (
       SELECT CAST(UNNEST(STRING_TO_ARRAY(exclusions, ', ')) AS INTEGER) AS exclusions_id
@@ -394,7 +394,7 @@ WITH customer_orders_new AS
     -- Meat Lovers - Exclude Beef
     -- Meat Lovers - Extra Bacon
     -- Meat Lovers - Exclude Cheese, Bacon - Extra Mushroom, Peppers
-    ```
+```
 WITH customer_orders_fixed AS
     (
       SELECT order_id, pizza_id, exclusions, CAST(UNNEST(STRING_TO_ARRAY(exclusions, ', ')) AS INTEGER) AS exclusion_id, extras, CAST(UNNEST(STRING_TO_ARRAY(extras, ', ')) AS INTEGER) AS extra_id
@@ -442,7 +442,7 @@ WITH customer_orders_fixed AS
 ---
 5. Generate an alphabetically ordered comma separated ingredient list for each pizza order from the customer_orders table and add a 2x in front of any relevant ingredients
 For example: "Meat Lovers: 2xBacon, Beef, ... , Salami"
-    ```
+```
 WITH pizza_recipes_fixed AS (
       SELECT pizza_id, temp.topping_id, topping_name
       FROM (
