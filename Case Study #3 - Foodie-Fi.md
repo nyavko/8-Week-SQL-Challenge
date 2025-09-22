@@ -229,4 +229,104 @@ WITH basic_info AS
 | 0              |
 
 
+## C. Challenge Payment Question
+ ```
+    WITH payment_periods AS 
+    (
+       SELECT customer_id, plan_id, plan_name,price,  start_date, COALESCE(LEAD(start_date, 1)   OVER (PARTITION BY customer_id ORDER BY start_date) - 1, '2020-12-31') AS end_date
+      FROM full_info
+      WHERE plan_id <> 0
+    ), 
+    payment_days AS
+    (
+    SELECT customer_id, plan_id, plan_name,  generate_series(start_date, end_date, interval '1 month'):: date AS payment_date, price AS amount
+    FROM payment_periods
+    WHERE plan_id IN (1,2)
+    UNION
+    SELECT customer_id, plan_id, plan_name, start_date AS payment_date, price AS amount
+    FROM payment_periods
+    WHERE plan_id = 3
+    )
+    SELECT customer_id, 
+    		plan_name, 
+            payment_date, 
+            CASE 
+    			WHEN plan_id IN (2,3) 
+    			AND LAG(plan_id, 1) OVER (PARTITION BY customer_id ORDER BY payment_date) = 1 
+    			AND LAG(payment_date, 1) OVER (PARTITION BY customer_id ORDER BY payment_date) + interval '1 month' > payment_date 
+    			THEN amount - LAG (amount, 1) OVER (PARTITION BY customer_id ORDER BY payment_date) 
+    			ELSE amount 
+                END,
+    		RANK() OVER (PARTITION BY customer_id ORDER BY payment_date) AS payment_order
+    FROM payment_days
+    WHERE payment_date < '2021-01-01';
+```
+To avoid overloading the results with a full output, let’s generate the output for a specific customer_id, as shown in the example, to ensure that the query is correct
+```
+WITH payment_periods AS 
+(
+   SELECT customer_id, plan_id, plan_name,price,  start_date, COALESCE(LEAD(start_date, 1)   OVER (PARTITION BY customer_id ORDER BY start_date) - 1, '2020-12-31') AS end_date
+  FROM full_info
+  WHERE plan_id <> 0
+), 
+payment_days AS
+(
+SELECT customer_id, 
+  		plan_id, 
+  		plan_name,  
+  		generate_series(start_date, end_date, interval '1 month'):: date AS payment_date, 
+  		price AS amount
+FROM payment_periods
+WHERE plan_id IN (1,2)
+UNION
+SELECT customer_id, 
+  		plan_id, 
+  		plan_name, start_date AS payment_date, price AS amount
+FROM payment_periods
+WHERE plan_id = 3
+)
+SELECT customer_id, 
+		plan_name, 
+        payment_date, 
+        CASE 
+			WHEN plan_id IN (2,3) 
+			AND LAG(plan_id, 1) OVER (PARTITION BY customer_id ORDER BY payment_date) = 1 
+			AND LAG(payment_date, 1) OVER (PARTITION BY customer_id ORDER BY payment_date) + interval '1 month' > payment_date 
+			THEN amount - LAG (amount, 1) OVER (PARTITION BY customer_id ORDER BY payment_date) 
+			ELSE amount 
+            END,
+		RANK() OVER (PARTITION BY customer_id ORDER BY payment_date) AS payment_order
+FROM payment_days
+WHERE payment_date < '2021-01-01' AND customer_id IN (1,2,13,15,16,18,19);
+```
+
+| customer_id | plan_name     | payment_date | amount | payment_order |
+| ----------- | ------------- | ------------ | ------ | ------------- |
+| 1           | basic monthly | 2020-08-08   | 9.90   | 1             |
+| 1           | basic monthly | 2020-09-08   | 9.90   | 2             |
+| 1           | basic monthly | 2020-10-08   | 9.90   | 3             |
+| 1           | basic monthly | 2020-11-08   | 9.90   | 4             |
+| 1           | basic monthly | 2020-12-08   | 9.90   | 5             |
+| 2           | pro annual    | 2020-09-27   | 199.00 | 1             |
+| 13          | basic monthly | 2020-12-22   | 9.90   | 1             |
+| 15          | pro monthly   | 2020-03-24   | 19.90  | 1             |
+| 15          | pro monthly   | 2020-04-24   | 19.90  | 2             |
+| 16          | basic monthly | 2020-06-07   | 9.90   | 1             |
+| 16          | basic monthly | 2020-07-07   | 9.90   | 2             |
+| 16          | basic monthly | 2020-08-07   | 9.90   | 3             |
+| 16          | basic monthly | 2020-09-07   | 9.90   | 4             |
+| 16          | basic monthly | 2020-10-07   | 9.90   | 5             |
+| 16          | pro annual    | 2020-10-21   | 189.10 | 6             |
+| 18          | pro monthly   | 2020-07-13   | 19.90  | 1             |
+| 18          | pro monthly   | 2020-08-13   | 19.90  | 2             |
+| 18          | pro monthly   | 2020-09-13   | 19.90  | 3             |
+| 18          | pro monthly   | 2020-10-13   | 19.90  | 4             |
+| 18          | pro monthly   | 2020-11-13   | 19.90  | 5             |
+| 18          | pro monthly   | 2020-12-13   | 19.90  | 6             |
+| 19          | pro monthly   | 2020-06-29   | 19.90  | 1             |
+| 19          | pro monthly   | 2020-07-29   | 19.90  | 2             |
+| 19          | pro annual    | 2020-08-29   | 199.00 | 3             |
+
+---
+
 [View on DB Fiddle](https://www.db-fiddle.com/f/rHJhRrXy5hbVBNJ6F6b9gJ/16)
